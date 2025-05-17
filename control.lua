@@ -10,9 +10,13 @@ ResultLocation = require "scripts.result-location"
 SearchGui = require "scripts.search-gui"
 require "scripts.remote"
 
+---@alias ItemType string
 ---@alias ItemName string
+---@alias ItemQuality string
 ---@alias EntityName string
 ---@alias SurfaceName string
+---@alias GameTick integer
+---@alias PlayerIndex integer
 
 ---@class (exact) SearchGuiRefs
 ---@field frame LuaGuiElement frame
@@ -91,13 +95,15 @@ require "scripts.remote"
 ---@field resource_count? number
 ---@field distance? number
 
----@alias CategorisedSurfaceData EntityGroup[]
+---@alias CategorisedSurfaceData Items<EntityGroup[]>
 
 ---@alias SurfaceDataCategoryName "consumers"|"producers"|"storage"|"logistics"|"modules"|"requesters"|"ground_items"|"entities"|"signals"|"map_tags"
 ---@alias SurfaceData table<SurfaceDataCategoryName, CategorisedSurfaceData>
 
 ---@alias SurfaceStatisticsCategoryName "consumers_count"|"producers_count"|"item_count"|"fluid_count"|"module_count"|"entity_count"|"resource_count"|"ground_count"|"request_count"|"signal_count"|"tag_count"
----@alias SurfaceStatistics table <SurfaceStatisticsCategoryName, number>
+---@alias SurfaceStatistics table <SurfaceStatisticsCategoryName, Items<number>>
+
+---@alias Items<T> table<ItemType, table<ItemName, table<ItemQuality, T>>>
 
 ---@class ResultLocationData
 ---@field position MapPosition

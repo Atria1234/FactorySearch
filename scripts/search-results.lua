@@ -3,17 +3,19 @@ local SearchResults = {}
 local group_gap_size = 20
 
 ---@param entity LuaEntity
+---@param item SignalID
 ---@param surface_data CategorisedSurfaceData
 ---@return EntityGroup
-function SearchResults.add_entity(entity, surface_data)
+function SearchResults.add_entity(entity, item, surface_data)
   -- Group entities
   -- Group contains count, avg_position, selection_box, entity_name, selection_boxes
   local entity_name = entity.name
   local entity_position = entity.position
   local entity_selection_box = entity.selection_box
+  local entity_surface_data = surface_data[item.type or 'item'][item.name][item.quality]
   ---@type EntityGroup?
   local assigned_group
-  for _, group in pairs(surface_data) do
+  for _, group in pairs(entity_surface_data) do
     if entity_name == group.entity_name and math2d.bounding_box.collides_with(entity_selection_box, group.selection_box) then
       -- Add entity to group
       assigned_group = group
@@ -57,7 +59,7 @@ function SearchResults.add_entity(entity, surface_data)
       selection_boxes = {[1] = entity.selection_box},
       localised_name = entity.localised_name,
     }
-    table.insert(surface_data, assigned_group)
+    table.insert(entity_surface_data, assigned_group)
   end
   return assigned_group
 end
@@ -65,10 +67,11 @@ end
 local add_entity = SearchResults.add_entity
 
 ---@param entity LuaEntity
+---@param item SignalID
 ---@param surface_data CategorisedSurfaceData
 ---@param recipe LuaRecipe|LuaRecipePrototype
-function SearchResults.add_entity_product(entity, surface_data, recipe)
-  local group = add_entity(entity, surface_data)
+function SearchResults.add_entity_product(entity, item, surface_data, recipe)
+  local group = add_entity(entity, item, surface_data)
   local group_recipe_list = group.recipe_list or {}
   recipe_name_info = group_recipe_list[recipe.name] or {localised_name = recipe.localised_name, count = 0}
   recipe_name_info.count = recipe_name_info.count + 1
@@ -77,54 +80,60 @@ function SearchResults.add_entity_product(entity, surface_data, recipe)
 end
 
 ---@param entity LuaEntity
+---@param item SignalID
 ---@param surface_data CategorisedSurfaceData
 ---@param item_count number
-function SearchResults.add_entity_storage(entity, surface_data, item_count)
-  local group = add_entity(entity, surface_data)
+function SearchResults.add_entity_storage(entity, item, surface_data, item_count)
+  local group = add_entity(entity, item, surface_data)
   local group_item_count = group.item_count or 0
   group.item_count = group_item_count + item_count
 end
 
 ---@param entity LuaEntity
+---@param item SignalID
 ---@param surface_data CategorisedSurfaceData
 ---@param fluid_count number
-function SearchResults.add_entity_storage_fluid(entity, surface_data, fluid_count)
-  local group = add_entity(entity, surface_data)
+function SearchResults.add_entity_storage_fluid(entity, item, surface_data, fluid_count)
+  local group = add_entity(entity, item, surface_data)
   local group_fluid_count = group.fluid_count or 0
   group.fluid_count = group_fluid_count + fluid_count
 end
 
 ---@param entity LuaEntity
+---@param item SignalID
 ---@param surface_data CategorisedSurfaceData
 ---@param module_count number
-function SearchResults.add_entity_module(entity, surface_data, module_count)
-  local group = add_entity(entity, surface_data)
+function SearchResults.add_entity_module(entity, item, surface_data, module_count)
+  local group = add_entity(entity, item, surface_data)
   local group_module_count = group.module_count or 0
   group.module_count = group_module_count + module_count
 end
 
 ---@param entity LuaEntity
+---@param item SignalID
 ---@param surface_data CategorisedSurfaceData
 ---@param request_count number
-function SearchResults.add_entity_request(entity, surface_data, request_count)
-  local group = add_entity(entity, surface_data)
+function SearchResults.add_entity_request(entity, item, surface_data, request_count)
+  local group = add_entity(entity, item, surface_data)
   local group_request_count = group.request_count or 0
   group.request_count = group_request_count + request_count
 end
 
 ---@param entity LuaEntity
+---@param item SignalID
 ---@param surface_data CategorisedSurfaceData
 ---@param signal_count number
-function SearchResults.add_entity_signal(entity, surface_data, signal_count)
-  local group = add_entity(entity, surface_data)
+function SearchResults.add_entity_signal(entity, item, surface_data, signal_count)
+  local group = add_entity(entity, item, surface_data)
   local group_signal_count = group.signal_count or 0
   group.signal_count = group_signal_count + signal_count
 end
 
 ---@param entity LuaEntity
+---@param item SignalID
 ---@param surface_data CategorisedSurfaceData
 ---@return number
-function SearchResults.add_entity_resource(entity, surface_data)
+function SearchResults.add_entity_resource(entity, item, surface_data)
   local resource_count
   if entity.initial_amount then
     resource_count = entity.amount / 3000  -- Calculate yield from amount
@@ -132,7 +141,7 @@ function SearchResults.add_entity_resource(entity, surface_data)
     resource_count = entity.amount
   end
 
-  local group = add_entity(entity, surface_data)
+  local group = add_entity(entity, item, surface_data)
   local group_resource_count = group.resource_count or 0
   group.resource_count = group_resource_count + resource_count
   return resource_count
@@ -168,15 +177,15 @@ function SearchResults.add_tag(tag, surface_data)
     },
     localised_name = localised_name,
   }
-  table.insert(surface_data, group)
+  table.insert(surface_data[tag.icon.type or 'item'][tag.icon.name][tag.icon.quality or 'normal'], group)
 end
 
 ---@param category SurfaceStatisticsCategoryName
+---@param item SignalID
 ---@param amount number
 ---@param surface_statistics SurfaceStatistics
-function SearchResults.add_surface_statistics(category, amount, surface_statistics)
-  surface_statistics[category] = surface_statistics[category] or 0
-  surface_statistics[category] = surface_statistics[category] + amount
+function SearchResults.add_surface_statistics(category, item, amount, surface_statistics)
+  surface_statistics[category][item.type or 'item'][item.name][item.quality] = surface_statistics[category][item.type or 'item'][item.name][item.quality] + amount
 end
 
 return SearchResults

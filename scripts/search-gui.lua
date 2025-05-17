@@ -15,11 +15,12 @@ local function get_signal_name(signal)
 end
 
 ---@param surface_name string
----@param surface_data CategorisedSurfaceData
+---@param item SignalID
+---@param category_data CategorisedSurfaceData
 ---@return GuiElemDef[]
-function SearchGui.build_surface_results(surface_name, surface_data)
+function SearchGui.build_surface_results(surface_name, item, category_data)
   local gui_elements = {}
-  for _, group in pairs(surface_data) do
+  for _, group in pairs(category_data[item.type or 'item'][item.name][item.quality]) do
     local entity_name = group.entity_name
     local distance_info = {""}
     if group.distance then
@@ -137,10 +138,11 @@ local function count_label(string, count)
   }
 end
 
+---@param item SignalID
 ---@param surface_statistics SurfaceStatistics
 ---@param surface_name_included boolean?
 ---@return GuiElemDef
-function SearchGui.build_surface_count(surface_statistics, surface_name_included)
+function SearchGui.build_surface_count(item, surface_statistics, surface_name_included)
   local labels = {}
   --[[if next(surface_statistics) then
     table.insert(labels, {
@@ -151,38 +153,38 @@ function SearchGui.build_surface_count(surface_statistics, surface_name_included
       style_mods = {top_margin = -8}  -- TODO don't reduce top margin when no planet name
     })
   end]]
-  if surface_statistics.consumers_count then
-    table.insert(labels, count_label({"search-gui.total-consumers"}, surface_statistics.consumers_count))
+  if surface_statistics.consumers_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-consumers"}, surface_statistics.consumers_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.producers_count then
-    table.insert(labels, count_label({"search-gui.total-producers"}, surface_statistics.producers_count))
+  if surface_statistics.producers_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-producers"}, surface_statistics.producers_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.item_count then
-    table.insert(labels, count_label({"search-gui.total-items"}, surface_statistics.item_count))
+  if surface_statistics.item_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-items"}, surface_statistics.item_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.fluid_count then
-    table.insert(labels, count_label({"search-gui.total-fluids"}, surface_statistics.fluid_count))
+  if surface_statistics.fluid_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-fluids"}, surface_statistics.fluid_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.module_count then
-    table.insert(labels, count_label({"search-gui.total-modules"}, surface_statistics.module_count))
+  if surface_statistics.module_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-modules"}, surface_statistics.module_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.entity_count then
-    table.insert(labels, count_label({"search-gui.total-entities"}, surface_statistics.entity_count))
+  if surface_statistics.entity_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-entities"}, surface_statistics.entity_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.resource_count then
-    table.insert(labels, count_label({"search-gui.total-resources"}, surface_statistics.resource_count))
+  if surface_statistics.resource_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-resources"}, surface_statistics.resource_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.ground_count then
-    table.insert(labels, count_label({"search-gui.total-ground"}, surface_statistics.ground_count))
+  if surface_statistics.ground_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-ground"}, surface_statistics.ground_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.request_count then
-    table.insert(labels, count_label({"search-gui.total-requested"}, surface_statistics.request_count))
+  if surface_statistics.request_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-requested"}, surface_statistics.request_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.signal_count then
-    table.insert(labels, count_label({"search-gui.total-signals"}, surface_statistics.signal_count))
+  if surface_statistics.signal_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-signals"}, surface_statistics.signal_count[item.type or 'item'][item.name][item.quality]))
   end
-  if surface_statistics.tag_count then
-    table.insert(labels, count_label({"search-gui.total-tags"}, surface_statistics.tag_count))
+  if surface_statistics.tag_count[item.type or 'item'][item.name][item.quality] > 0 then
+    table.insert(labels, count_label({"search-gui.total-tags"}, surface_statistics.tag_count[item.type or 'item'][item.name][item.quality]))
   end
   local flow = {
     type = "flow",
@@ -198,12 +200,13 @@ function SearchGui.build_surface_count(surface_statistics, surface_name_included
   return flow
 end
 
+---@param item SignalID
 ---@param data table<SurfaceName, SurfaceData>
 ---@param statistics table<SurfaceName, SurfaceStatistics>
 ---@param frame LuaGuiElement
 ---@param check_result_found? boolean Default: true
 ---@param include_surface_name? boolean Whether to show the surface name when there's only one surface in `data`
-function SearchGui.build_results(data, statistics, frame, check_result_found, include_surface_name)
+function SearchGui.build_results(item, data, statistics, frame, check_result_found, include_surface_name)
   if not (frame and frame.valid) then return end
 
   frame.clear()
@@ -222,7 +225,7 @@ function SearchGui.build_results(data, statistics, frame, check_result_found, in
     local surface_contains_results = false
     for _, category_data in pairs(surface_data) do
       -- TODO surface_statistics check here?
-      surface_contains_results = surface_contains_results or table_size(category_data) > 0
+      surface_contains_results = surface_contains_results or not not next(category_data[item.type or 'item'][item.name][item.quality])
     end
     result_found = result_found or surface_contains_results
     if not surface_contains_results then
@@ -231,7 +234,7 @@ function SearchGui.build_results(data, statistics, frame, check_result_found, in
 
     gui.add(frame, {
       SearchGui.build_surface_name(include_surface_name, surface_name),
-      SearchGui.build_surface_count(statistics[surface_name], include_surface_name),
+      SearchGui.build_surface_count(item, statistics[surface_name], include_surface_name),
       {
         type = "frame",
         direction = "vertical",
@@ -241,60 +244,61 @@ function SearchGui.build_results(data, statistics, frame, check_result_found, in
             type = "table",
             column_count = 10,
             style = "slot_table",  --       padding = 0, TODO 2.0
-            children = SearchGui.build_surface_results(surface_name, surface_data.consumers)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.consumers)
           },
           {
             type = "table",
             column_count = 10,
             style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.producers)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.producers)
           },
           {
             type = "table",
             column_count = 10,
             style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.storage)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.storage)
           },
           {
             type = "table",
             column_count = 10,
             style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.logistics)
-          },          {
-            type = "table",
-            column_count = 10,
-            style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.modules)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.logistics)
           },
           {
             type = "table",
             column_count = 10,
             style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.entities)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.modules)
           },
           {
             type = "table",
             column_count = 10,
             style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.ground_items)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.entities)
           },
           {
             type = "table",
             column_count = 10,
             style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.requesters)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.ground_items)
           },
           {
             type = "table",
             column_count = 10,
             style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.signals)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.requesters)
           },
           {
             type = "table",
             column_count = 10,
             style = "slot_table",
-            children = SearchGui.build_surface_results(surface_name, surface_data.map_tags)
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.signals)
+          },
+          {
+            type = "table",
+            column_count = 10,
+            style = "slot_table",
+            children = SearchGui.build_surface_results(surface_name, item, surface_data.map_tags)
           },
         }
       }
@@ -755,7 +759,7 @@ function SearchGui.start_search(player, player_data, _, _, immediate)
       if search_started then
         SearchGui.build_loading_results(refs.result_flow)
       else
-        SearchGui.build_results({}, {}, refs.result_flow)
+        SearchGui.build_results(item, {}, {}, refs.result_flow)
       end
     else
       SearchGui.build_invalid_state(refs.result_flow)

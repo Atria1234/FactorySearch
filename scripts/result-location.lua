@@ -139,7 +139,7 @@ function ResultLocation.open(player, data)
     position = position,
     surface = surface_name,
   }
-  player.zoom = zoom_level -- TODO zoom out when showing map tags
+  player.zoom = zoom_level
 
   local player_data = storage.players[player.index]
   local refs = player_data.refs
